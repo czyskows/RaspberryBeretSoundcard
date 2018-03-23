@@ -1,0 +1,61 @@
+// Definitions for raspberryberet soundcard
+/dts-v1/;
+/plugin/;
+
+//#include <dt-bindings/clock/bcm2835.h>
+
+/ {
+	compatible = "brcm,bcm2708","brcm,brcm2835";
+
+	fragment@0 {
+		target = <&i2s>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	/* set GPIO4 to ALT0 (GPCLK0) */ 
+        fragment@1 {
+                target = <&gpio>;
+                __overlay__ {
+                rb_clk_pin: rb_clk_pin {
+                        brcm,pins = <4>;
+                        brcm,function = <4>;
+                        };
+                };
+        };
+
+	fragment@2 {
+		target = <&i2c1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			cs42448: cs42448@48 {
+				#sound-dai-cells = <0>;
+				compatible = "cirrus,cs42448";
+				clocks = <&clocks 38>;
+				clock-names = "mclk";
+				pinctrl-names = "default";
+				pinctrl-0 = <&rb_clk_pin>;
+				reg = <0x48>;
+				VA-supply = <&vdd_5v0_reg>;
+				VD-supply = <&vdd_3v3_reg>;
+				VLS-supply = <&vdd_3v3_reg>;
+				VLC-supply = <&vdd_3v3_reg>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&sound>;
+		__overlay__ {
+			compatible = "raspberry-beret,raspberry-beret-soundcard";
+			i2s-controller = <&i2s>;
+			codec = <&cs42448>;
+			status = "okay";
+		};
+	};
+};
